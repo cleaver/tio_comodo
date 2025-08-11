@@ -78,8 +78,12 @@ defmodule TioComodo.Repl.Server do
     # Switch terminal to raw mode
     switch_to_raw_mode()
 
-    # Spawn and link the reader process
-    reader_pid = spawn_link(&read_loop/0)
+    server_pid = self()
+    # Spawn and link the reader process, passing the server's PID
+    reader_pid = spawn_link(fn -> 
+      Process.group_leader(server_pid, Process.group_leader())
+      read_loop(server_pid) 
+    end)
 
     # Initialize state
     provider =
@@ -136,7 +140,7 @@ defmodule TioComodo.Repl.Server do
     :shell.start_interactive({:noshell, :raw})
   end
 
-  defp read_loop do
+  defp read_loop(server_pid) do
     # Block on reading input
     case :io.get_chars("", 1024) do
       :eof ->
@@ -145,13 +149,13 @@ defmodule TioComodo.Repl.Server do
 
       {:error, reason} ->
         Logger.error("Error reading input: #{inspect(reason)}")
-        read_loop()
+        read_loop(server_pid)
 
       input when is_binary(input) ->
         # Parse the input and send events to the server
         events = InputParser.parse(input)
-        GenServer.cast(__MODULE__, {:keypress, events})
-        read_loop()
+        GenServer.cast(server_pid, {:keypress, events})
+        read_loop(server_pid)
     end
   end
 
