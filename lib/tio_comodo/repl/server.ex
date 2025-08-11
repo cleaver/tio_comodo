@@ -35,7 +35,9 @@ defmodule TioComodo.Repl.Server do
     # PID of the reader process
     :reader_pid,
     # Module implementing `TioComodo.Repl.Provider`
-    :provider
+    :provider,
+    # PID of the parent process
+    :parent
   ]
 
   @type t :: %__MODULE__{
@@ -46,7 +48,8 @@ defmodule TioComodo.Repl.Server do
           original_buffer: String.t() | nil,
           prompt: String.t(),
           reader_pid: pid() | nil,
-          provider: module()
+          provider: module(),
+          parent: pid()
         }
 
   @doc """
@@ -98,7 +101,8 @@ defmodule TioComodo.Repl.Server do
       original_buffer: nil,
       prompt: Keyword.get(opts, :prompt, "> "),
       reader_pid: reader_pid,
-      provider: provider
+      provider: provider,
+      parent: Keyword.get(opts, :parent)
     }
 
     # Perform initial render
@@ -124,9 +128,10 @@ defmodule TioComodo.Repl.Server do
   end
 
   @impl GenServer
-  def terminate(_reason, _state) do
+  def terminate(_reason, %__MODULE__{parent: parent} = _state) do
     # Restore terminal to cooked mode
     :shell.start_interactive(:noshell)
+    send(parent, :repl_terminated)
   end
 
   @impl GenServer
