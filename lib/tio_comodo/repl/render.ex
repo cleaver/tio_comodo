@@ -6,7 +6,7 @@ defmodule TioComodo.Repl.Render do
   - Redrawing the current line with prompt and buffer
   - Positioning the cursor correctly
   - Displaying autocomplete suggestions
-  - Rendering colored output for various message types
+  - All terminal output operations
   """
 
   alias TioComodo.Colorscheme
@@ -28,10 +28,10 @@ defmodule TioComodo.Repl.Render do
   @spec redraw(map()) :: :ok
   def redraw(%{prompt: prompt, buffer: buffer, cursor_pos: cursor_pos}) do
     # Move cursor to beginning of line
-    IO.write("\r")
+    home_cursor()
 
     # Clear the entire line
-    IO.write("\e[K")
+    clear_line()
 
     # Print colored prompt and buffer
     colored_prompt = Colorscheme.colorize(prompt, :prompt)
@@ -44,7 +44,7 @@ defmodule TioComodo.Repl.Render do
 
     if chars_to_move_back > 0 do
       # Move cursor back by the required number of characters
-      IO.write("\e[#{chars_to_move_back}D")
+      move_cursor_back(chars_to_move_back)
     end
   end
 
@@ -59,17 +59,18 @@ defmodule TioComodo.Repl.Render do
 
   def print_completions(completions) when is_list(completions) do
     # Move to next line, ensuring carriage return
-    IO.write("\r\n")
+    newline()
 
     # Print each completion with a colored bullet point
     Enum.each(completions, fn completion ->
       colored_bullet = Colorscheme.colorize("  • ", :completion)
-      IO.write(colored_bullet <> completion <> "\r\n")
+      IO.write(colored_bullet <> completion)
+      newline()
     end)
 
     # Move back up to the original line
     lines_to_move_up = length(completions) + 1
-    IO.write("\e[#{lines_to_move_up}A")
+    move_cursor_up(lines_to_move_up)
   end
 
   @doc """
@@ -81,30 +82,61 @@ defmodule TioComodo.Repl.Render do
     IO.write(colored_message)
   end
 
-  @doc """
-  Prints success messages with success color styling.
-  """
+  # Terminal output control functions
+
+  @doc "Prints a newline with carriage return"
+  @spec newline() :: :ok
+  def newline, do: IO.write("\r\n")
+
+  @doc "Moves cursor to beginning of line"
+  @spec home_cursor() :: :ok
+  def home_cursor, do: IO.write("\r")
+
+  @doc "Clears the entire line"
+  @spec clear_line() :: :ok
+  def clear_line, do: IO.write("\e[K")
+
+  @doc "Moves cursor up by specified number of lines"
+  @spec move_cursor_up(non_neg_integer()) :: :ok
+  def move_cursor_up(lines), do: IO.write("\e[#{lines}A")
+
+  @doc "Moves cursor back by specified number of characters"
+  @spec move_cursor_back(non_neg_integer()) :: :ok
+  def move_cursor_back(chars), do: IO.write("\e[#{chars}D")
+
+  @doc "Prints text with newline replacement for proper terminal formatting"
+  @spec print_with_newlines(String.t()) :: :ok
+  def print_with_newlines(text) do
+    formatted_text = String.replace(text, ~r/(?<!\r)\n/u, "\r\n")
+    IO.write(formatted_text)
+  end
+
+  @doc "Prints a command with user color styling and newlines"
+  @spec print_command(String.t()) :: :ok
+  def print_command(command) do
+    newline()
+    colored_command = Colorscheme.colorize(command, :user)
+    IO.write(colored_command)
+    newline()
+  end
+
+  @doc "Prints an empty line"
+  @spec print_empty_line() :: :ok
+  def print_empty_line, do: newline()
+
+  @doc "Prints success messages with success color styling and newlines"
   @spec print_success(String.t()) :: :ok
   def print_success(message) do
     colored_message = Colorscheme.colorize(message, :success)
-    IO.write(colored_message)
+    print_with_newlines(colored_message)
+    newline()
   end
 
-  @doc """
-  Prints warning messages with warning color styling.
-  """
-  @spec print_warning(String.t()) :: :ok
-  def print_warning(message) do
-    colored_message = Colorscheme.colorize(message, :warning)
-    IO.write(colored_message)
-  end
-
-  @doc """
-  Prints info messages with info color styling.
-  """
+  @doc "Prints info messages with info color styling and newlines"
   @spec print_info(String.t()) :: :ok
   def print_info(message) do
     colored_message = Colorscheme.colorize(message, :info)
-    IO.write(colored_message)
+    print_with_newlines(colored_message)
+    newline()
   end
 end

@@ -79,15 +79,7 @@ defmodule TioComodo.Repl.RenderTest do
       assert output != "Test success"
     end
 
-    test "print_warning outputs with warning colors" do
-      output = capture_io(fn -> Render.print_warning("Test warning") end)
 
-      # Should contain the warning message
-      assert output =~ "Test warning"
-
-      # Should contain color codes
-      assert output != "Test warning"
-    end
 
     test "print_info outputs with info colors" do
       output = capture_io(fn -> Render.print_info("Test info") end)

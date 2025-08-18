@@ -35,7 +35,6 @@ defmodule TioComodo.Repl.Server do
   alias TioComodo.Repl.{InputParser, Render}
   alias TioComodo.Repl.Helpers.{History, Autocomplete}
   alias TioComodo.Repl.Provider
-  alias TioComodo.Colorscheme
 
   @doc """
   Represents the state of the REPL server.
@@ -344,10 +343,7 @@ defmodule TioComodo.Repl.Server do
       History.persist_history_item(trimmed)
 
       # Print the command on a new line with colored styling
-      IO.write("\r\n")
-      command_display = Colorscheme.colorize(trimmed, :user)
-      IO.write(command_display)
-      IO.write("\r\n")
+      Render.print_command(trimmed)
 
       # Dispatch the command
       state.provider.dispatch(trimmed)
@@ -369,15 +365,13 @@ defmodule TioComodo.Repl.Server do
       new_state
     else
       # Just print a new line for empty input
-      IO.write("\r\n")
+      Render.print_empty_line()
       state
     end
   end
 
   defp handle_dispatch_result({:ok, message}) when message != "" do
-    colored_message = Colorscheme.colorize(message, :success)
-    IO.write(String.replace(colored_message, ~r/(?<!\r)\n/u, "\r\n"))
-    IO.write("\r\n")
+    Render.print_success(message)
   end
 
   defp handle_dispatch_result({:ok, ""}) do
@@ -385,15 +379,11 @@ defmodule TioComodo.Repl.Server do
   end
 
   defp handle_dispatch_result({:error, message}) do
-    Render.print_error("Error: ")
-    IO.write(message)
-    IO.write("\r\n")
+    Render.print_error("Error: #{message}")
   end
 
   defp handle_dispatch_result({:stop, reason, message}) do
-    colored_message = Colorscheme.colorize(message, :info)
-    IO.write(String.replace(colored_message, ~r/(?<!\r)\n/u, "\r\n"))
-    IO.write("\r\n")
+    Render.print_info(message)
     # Signal to stop the REPL
     Process.send_after(self(), {:stop, reason}, 0)
   end
