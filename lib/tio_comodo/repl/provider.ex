@@ -17,7 +17,7 @@ defmodule TioComodo.Repl.Provider do
           {:error, "Unknown command: #{command}"}
       end
     else
-      {:error, :no_provider} -> {:error, "No command_provider configured in config.exs"}
+      {:error, :no_provider} -> {:error, "No simple_provider configured in config.exs"}
       [] -> {:ok, ""}
     end
   end
@@ -34,7 +34,7 @@ defmodule TioComodo.Repl.Provider do
   end
 
   defp fetch_command_map do
-    case Application.get_env(:tio_comodo, :command_provider) do
+    case Application.get_env(:tio_comodo, :simple_provider) do
       {module, function} -> {:ok, apply(module, function, [])}
       _ -> {:error, :no_provider}
     end

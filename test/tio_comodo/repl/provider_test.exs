@@ -20,8 +20,8 @@ defmodule TioComodo.Repl.ProviderTest do
 
   # 2. Use the setup block to configure the application environment for each test.
   setup do
-    # Point the :command_provider to our test module's function.
-    Application.put_env(:tio_comodo, :command_provider, {TestCommands, :commands})
+    # Point the :simple_provider to our test module's function.
+    Application.put_env(:tio_comodo, :simple_provider, {TestCommands, :commands})
     :ok
   end
 
