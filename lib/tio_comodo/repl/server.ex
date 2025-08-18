@@ -35,6 +35,7 @@ defmodule TioComodo.Repl.Server do
   alias TioComodo.Repl.{InputParser, Render}
   alias TioComodo.Repl.Helpers.{History, Autocomplete}
   alias TioComodo.Repl.Provider
+  alias TioComodo.Colorscheme
 
   @doc """
   Represents the state of the REPL server.
@@ -103,9 +104,9 @@ defmodule TioComodo.Repl.Server do
 
     server_pid = self()
     # Spawn and link the reader process, passing the server's PID
-    reader_pid = spawn_link(fn -> 
+    reader_pid = spawn_link(fn ->
       Process.group_leader(server_pid, Process.group_leader())
-      read_loop(server_pid) 
+      read_loop(server_pid)
     end)
 
     # Initialize state
@@ -151,7 +152,11 @@ defmodule TioComodo.Repl.Server do
   def terminate(_reason, %__MODULE__{parent: parent} = _state) do
     # Restore terminal to cooked mode
     :shell.start_interactive(:noshell)
-    send(parent, :repl_terminated)
+
+    # Only send message if parent exists
+    if parent do
+      send(parent, :repl_terminated)
+    end
   end
 
   @impl GenServer
@@ -338,7 +343,10 @@ defmodule TioComodo.Repl.Server do
       new_history = state.history ++ [trimmed]
       History.persist_history_item(trimmed)
 
-      # Print the command on a new line
+      # Print the command on a new line with colored styling
+      IO.write("\r\n")
+      command_display = Colorscheme.colorize(trimmed, :user)
+      IO.write(command_display)
       IO.write("\r\n")
 
       # Dispatch the command
@@ -367,7 +375,8 @@ defmodule TioComodo.Repl.Server do
   end
 
   defp handle_dispatch_result({:ok, message}) when message != "" do
-    IO.write(String.replace(message, ~r/(?<!\r)\n/u, "\r\n"))
+    colored_message = Colorscheme.colorize(message, :success)
+    IO.write(String.replace(colored_message, ~r/(?<!\r)\n/u, "\r\n"))
     IO.write("\r\n")
   end
 
@@ -376,11 +385,14 @@ defmodule TioComodo.Repl.Server do
   end
 
   defp handle_dispatch_result({:error, message}) do
-    IO.write("Error: #{message}\r\n")
+    Render.print_error("Error: ")
+    IO.write(message)
+    IO.write("\r\n")
   end
 
   defp handle_dispatch_result({:stop, reason, message}) do
-    IO.write(String.replace(message, ~r/(?<!\r)\n/u, "\r\n"))
+    colored_message = Colorscheme.colorize(message, :info)
+    IO.write(String.replace(colored_message, ~r/(?<!\r)\n/u, "\r\n"))
     IO.write("\r\n")
     # Signal to stop the REPL
     Process.send_after(self(), {:stop, reason}, 0)

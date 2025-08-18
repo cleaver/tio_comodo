@@ -60,6 +60,31 @@ config :tio_comodo,
 
 With this setup, you do not need to implement the full provider behaviour; the default provider will dispatch commands based on your `commands/0` map and also supply tab-completions from the command names.
 
+### 3. Configure Colorscheme (Optional)
+
+TioComodo includes a beautiful default colorscheme inspired by Gruvbox, but you can customize the colors to match your preferences. In your `config/config.exs`, add a colorscheme configuration:
+
+```elixir
+# config/config.exs
+
+import Config
+
+config :tio_comodo,
+  simple_provider: {MyApp.Repl.Commands, :commands},
+  colourscheme: [
+    user: :green,        # Color for user input
+    background: :black,  # Background color
+    prompt: :blue,       # Prompt color
+    error: :red,         # Error message color
+    success: :green,     # Success message color
+    warning: :yellow,    # Warning message color
+    info: :blue,         # Info message color
+    completion: :cyan    # Tab completion color
+  ]
+```
+
+Available colors include standard terminal colors like `:red`, `:green`, `:blue`, `:yellow`, `:cyan`, `:magenta`, `:white`, and `:black`. You can also use more specific colors like `:bright_red`, `:bright_green`, etc. Note that colors must be specified as atoms (with colons), not as strings.
+
 #### Optional: Add a Catchall Handler
 
 You can optionally configure a catchall handler that will receive any input that doesn't match a defined command:
@@ -103,7 +128,7 @@ config :tio_comodo,
 
 The catchall handler will not appear in tab-completion suggestions.
 
-### Alternative: Create a Custom Command Provider
+### 4. Alternative: Create a Custom Command Provider
 
 If you need more control over command parsing and dispatch, you can implement a full command provider module.
 
@@ -155,7 +180,7 @@ config :tio_comodo,
   provider: MyApp.Repl.CustomCommands
 ```
 
-### 3. Update Your Application Supervisor
+### 5. Update Your Application Supervisor
 
 To run the REPL when your application starts, you need to add the `TioComodo.Repl.Server` to your application's supervision tree. You also need a lightweight process to listen for the REPL's termination signal to ensure a clean shutdown of the entire application.
 
@@ -195,7 +220,7 @@ end
 - Upon receiving the message, the process calls `:init.stop()`, which gracefully terminates the entire Erlang VM, ensuring your application exits cleanly.
 - The `TioComodo.Repl.Server` is started as a child in the supervision tree, configured with a custom prompt and the parent's PID.
 
-### 4. Run Your Application
+### 6. Run Your Application
 
 Now you are ready to run your application's REPL. Use the following command, and the interactive prompt will appear.
 

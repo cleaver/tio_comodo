@@ -23,7 +23,7 @@ defmodule TioComodo.MixProject do
     [
       {:owl, "~> 0.12"},
       {:ucwidth, "~> 0.2"},
-      {:ex_doc, "~> 0.34", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.34", only: :dev, runtime: false}
     ]
   end
 end

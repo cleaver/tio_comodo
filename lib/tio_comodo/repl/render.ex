@@ -1,12 +1,15 @@
 defmodule TioComodo.Repl.Render do
   @moduledoc """
-  Handles rendering of the REPL interface using ANSI escape codes.
+  Handles rendering of the REPL interface using ANSI escape codes and colors.
 
   This module is responsible for:
   - Redrawing the current line with prompt and buffer
   - Positioning the cursor correctly
   - Displaying autocomplete suggestions
+  - Rendering colored output for various message types
   """
+
+  alias TioComodo.Colorscheme
 
   @doc """
   Redraws the current line with the prompt, buffer, and cursor positioned correctly.
@@ -19,7 +22,7 @@ defmodule TioComodo.Repl.Render do
   Uses ANSI escape codes to:
   1. Move cursor to beginning of line (\r)
   2. Clear the entire line (\e[K)
-  3. Print the prompt and buffer
+  3. Print the colored prompt and buffer
   4. Position the cursor at the correct position
   """
   @spec redraw(map()) :: :ok
@@ -30,8 +33,9 @@ defmodule TioComodo.Repl.Render do
     # Clear the entire line
     IO.write("\e[K")
 
-    # Print prompt and buffer
-    IO.write(prompt <> buffer)
+    # Print colored prompt and buffer
+    colored_prompt = Colorscheme.colorize(prompt, :prompt)
+    IO.write(colored_prompt <> buffer)
 
     # Position cursor at the correct position
     # We need to move back from the end of the buffer to the cursor position
@@ -48,7 +52,7 @@ defmodule TioComodo.Repl.Render do
   Prints a list of completion suggestions below the current line.
 
   Takes a list of strings representing the available completions.
-  Displays them in a formatted list below the current prompt.
+  Displays them in a formatted list below the current prompt with colored bullet points.
   """
   @spec print_completions([String.t()]) :: :ok
   def print_completions([]), do: :ok
@@ -57,13 +61,50 @@ defmodule TioComodo.Repl.Render do
     # Move to next line, ensuring carriage return
     IO.write("\r\n")
 
-    # Print each completion with a bullet point
+    # Print each completion with a colored bullet point
     Enum.each(completions, fn completion ->
-      IO.write("  • #{completion}\r\n")
+      colored_bullet = Colorscheme.colorize("  • ", :completion)
+      IO.write(colored_bullet <> completion <> "\r\n")
     end)
 
     # Move back up to the original line
     lines_to_move_up = length(completions) + 1
     IO.write("\e[#{lines_to_move_up}A")
+  end
+
+  @doc """
+  Prints error messages with error color styling.
+  """
+  @spec print_error(String.t()) :: :ok
+  def print_error(message) do
+    colored_message = Colorscheme.colorize(message, :error)
+    IO.write(colored_message)
+  end
+
+  @doc """
+  Prints success messages with success color styling.
+  """
+  @spec print_success(String.t()) :: :ok
+  def print_success(message) do
+    colored_message = Colorscheme.colorize(message, :success)
+    IO.write(colored_message)
+  end
+
+  @doc """
+  Prints warning messages with warning color styling.
+  """
+  @spec print_warning(String.t()) :: :ok
+  def print_warning(message) do
+    colored_message = Colorscheme.colorize(message, :warning)
+    IO.write(colored_message)
+  end
+
+  @doc """
+  Prints info messages with info color styling.
+  """
+  @spec print_info(String.t()) :: :ok
+  def print_info(message) do
+    colored_message = Colorscheme.colorize(message, :info)
+    IO.write(colored_message)
   end
 end
