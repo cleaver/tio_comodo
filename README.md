@@ -60,6 +60,49 @@ config :tio_comodo,
 
 With this setup, you do not need to implement the full provider behaviour; the default provider will dispatch commands based on your `commands/0` map and also supply tab-completions from the command names.
 
+#### Optional: Add a Catchall Handler
+
+You can optionally configure a catchall handler that will receive any input that doesn't match a defined command:
+
+```elixir
+# lib/my_app/repl/commands.ex
+
+defmodule MyApp.Repl.Commands do
+  @moduledoc "Commands for the REPL"
+
+  def commands do
+    %{
+      "hello" => {__MODULE__, :hello, []},
+      "time" => {__MODULE__, :time, []},
+      "quit" => {__MODULE__, :quit, []}
+    }
+  end
+
+  def hello(args), do: {:ok, "Hello, #{Enum.join(args, " ")}!"}
+  def time(_args), do: {:ok, "Current time is: #{DateTime.utc_now() |> DateTime.to_string()}"}
+  def quit(_args), do: {:stop, :normal, "Goodbye!"}
+
+  # Catchall handler receives the full input string
+  def handle_unknown(input) do
+    {:ok, "I don't understand: #{input}. Try 'hello', 'time', or 'quit'."}
+  end
+end
+```
+
+Configure both the simple provider and the catchall handler:
+
+```elixir
+# config/config.exs
+
+import Config
+
+config :tio_comodo,
+  simple_provider: {MyApp.Repl.Commands, :commands},
+  catchall_handler: {MyApp.Repl.Commands, :handle_unknown}
+```
+
+The catchall handler will not appear in tab-completion suggestions.
+
 ### Alternative: Create a Custom Command Provider
 
 If you need more control over command parsing and dispatch, you can implement a full command provider module.

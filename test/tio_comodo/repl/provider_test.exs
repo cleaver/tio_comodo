@@ -9,13 +9,15 @@ defmodule TioComodo.Repl.ProviderTest do
       %{
         "ping" => {__MODULE__, :ping, []},
         "echo" => {__MODULE__, :echo, []},
-        "stop" => {__MODULE__, :stop, []}
+        "stop" => {__MODULE__, :stop, []},
+        "catchall_handler" => {__MODULE__, :handle_catchall, []}
       }
     end
 
     def ping(_args), do: {:ok, "pong"}
     def echo(args), do: {:ok, Enum.join(args, " ")}
     def stop(_args), do: {:stop, :test_stop, "stopping"}
+    def handle_catchall(input), do: {:ok, "Catchall handled: #{input}"}
   end
 
   # 2. Use the setup block to configure the application environment for each test.
@@ -34,8 +36,8 @@ defmodule TioComodo.Repl.ProviderTest do
       assert Provider.dispatch("echo hello world") == {:ok, "hello world"}
     end
 
-    test "returns an error for an unknown command" do
-      assert Provider.dispatch("unknown_command") == {:error, "Unknown command: unknown_command"}
+    test "calls catchall handler for unknown commands" do
+      assert Provider.dispatch("unknown_command") == {:ok, "Catchall handled: unknown_command"}
     end
 
     test "handles empty input" do
@@ -53,6 +55,8 @@ defmodule TioComodo.Repl.ProviderTest do
       assert "ping" in completions
       assert "echo" in completions
       assert "stop" in completions
+      # Ensure catchall_handler is not included in completions
+      refute "catchall_handler" in completions
     end
 
     test "returns completions that match the buffer" do
@@ -62,6 +66,40 @@ defmodule TioComodo.Repl.ProviderTest do
 
     test "returns no completions if nothing matches" do
       assert Provider.completions("z", 1) == []
+    end
+  end
+
+  describe "catchall_handler from command map" do
+    test "calls catchall handler for unknown commands" do
+      assert Provider.dispatch("unknown_command arg1 arg2") == {:ok, "Catchall handled: unknown_command arg1 arg2"}
+    end
+
+    test "calls catchall handler with the full input string" do
+      assert Provider.dispatch("some random input") == {:ok, "Catchall handled: some random input"}
+    end
+
+    test "still dispatches known commands normally when catchall is configured" do
+      assert Provider.dispatch("ping") == {:ok, "pong"}
+      assert Provider.dispatch("echo hello") == {:ok, "hello"}
+    end
+  end
+
+  describe "without catchall_handler in command map" do
+    defmodule TestCommandsNoCatchall do
+      def commands do
+        %{
+          "ping" => {__MODULE__, :ping, []},
+          "echo" => {__MODULE__, :echo, []}
+        }
+      end
+
+      def ping(_args), do: {:ok, "pong"}
+      def echo(args), do: {:ok, Enum.join(args, " ")}
+    end
+
+    test "returns error for unknown commands when no catchall is configured" do
+      Application.put_env(:tio_comodo, :simple_provider, {TestCommandsNoCatchall, :commands})
+      assert Provider.dispatch("unknown_command") == {:error, "Unknown command: unknown_command"}
     end
   end
 end
