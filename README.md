@@ -1,6 +1,6 @@
 # TioComodo
 
-TioComodo provides a simple, embeddable Read-Eval-Print Loop (REPL) for your Elixir applications. It allows you to define a custom set of commands and run them in an interactive terminal session, making it a great tool for building CLI applications, admin interfaces, or for inspecting a running system.
+TioComodo provides a simple, embeddable Read-Eval-Print Loop (REPL) for your Elixir applications. It allows you to define a custom set of commands and run them in an interactive terminal session, for a simple terminal I/O application. TioComodo avoids native dependencies for ease of use. For a more advanced TUI, look at other packages like [Ratatouille](https://hex.pm/packages/ratatouille).
 
 ## Installation
 

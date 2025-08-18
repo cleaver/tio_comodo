@@ -1,12 +1,32 @@
 defmodule TioComodo.Repl.Server do
   @moduledoc """
-  The core REPL server that manages state and coordinates input/output.
+  A customizable REPL (Read-Eval-Print Loop) server.
 
-  This GenServer is responsible for:
-  - Managing the REPL state (buffer, cursor position, history, etc.)
-  - Coordinating between input parsing and rendering
-  - Handling terminal mode switching
-  - Processing user input events
+  This GenServer provides a flexible and extensible REPL environment that can be
+  integrated into other applications. It handles user input, maintains history,
+  provides autocompletion, and dispatches commands to a configurable provider
+  module.
+
+  ## Starting the Server
+
+  To start the REPL server, you typically add it to your application's
+  supervision tree:
+
+      children = [
+        {TioComodo.Repl.Server, prompt: "my_app> ", name: MyApp.Repl}
+      ]
+
+      Supervisor.start_link(children, strategy: :one_for_one)
+
+  ## Command Providers
+
+  The REPL's behavior is customized through a *provider* module. A provider is
+  an Elixir module that implements the `TioComodo.Repl.Provider.Behaviour`
+  behaviour. This behaviour defines callbacks for handling command dispatch and
+  autocompletion.
+
+  See `TioComodo.Repl.Provider.Behaviour` for more details on implementing a
+  custom provider.
   """
 
   use GenServer
