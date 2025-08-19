@@ -5,7 +5,7 @@ defmodule TioComodo.ColorschemeTest do
 
   setup do
     # Ensure a clean slate for each test
-    Application.delete_env(:tio_comodo, :colourscheme)
+    Application.delete_env(:tio_comodo, :colorscheme)
     :ok
   end
 
@@ -19,7 +19,7 @@ defmodule TioComodo.ColorschemeTest do
     end
 
     test "merges user config over defaults using atoms" do
-      Application.put_env(:tio_comodo, :colourscheme, %{
+      Application.put_env(:tio_comodo, :colorscheme, %{
         user: :magenta,
         prompt: :cyan
       })
@@ -45,7 +45,7 @@ defmodule TioComodo.ColorschemeTest do
     end
 
     test "applies a user-configured color to text" do
-      Application.put_env(:tio_comodo, :colourscheme, %{error: :light_white})
+      Application.put_env(:tio_comodo, :colorscheme, %{error: :light_white})
 
       text = "Error message"
       color_key = :error

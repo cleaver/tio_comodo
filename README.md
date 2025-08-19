@@ -71,7 +71,7 @@ import Config
 
 config :tio_comodo,
   simple_provider: {MyApp.Repl.Commands, :commands},
-  colourscheme: [
+  colorscheme: [
     user: :green,        # Color for user input
     background: :black,  # Background color
     prompt: :blue,       # Prompt color

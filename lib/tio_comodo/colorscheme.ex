@@ -45,7 +45,7 @@ defmodule TioComodo.Colorscheme do
   end
 
   defp user_colorscheme do
-    Application.get_env(:tio_comodo, :colourscheme, %{})
+    Application.get_env(:tio_comodo, :colorscheme, %{})
   end
 
   @doc """
