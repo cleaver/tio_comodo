@@ -4,13 +4,12 @@ TioComodo provides a simple, embeddable Read-Eval-Print Loop (REPL) for your Eli
 
 ## Installation
 
-To use TioComodo in your project, add it to your list of dependencies in `mix.exs`. You can point it to a local path or a Git repository.
+To use TioComodo in your project, add it to your list of dependencies in `mix.exs`.
 
 ```elixir
 def deps do
   [
-    # Example using a local path
-    {:tio_comodo, path: "./path/to/tio_comodo"}
+    {:tio_comodo, "~> 0.1.1"}
   ]
 end
 ```
