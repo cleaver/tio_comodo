@@ -83,7 +83,7 @@ config :tio_comodo,
   ]
 ```
 
-Available colors include standard terminal colors like `:red`, `:green`, `:blue`, `:yellow`, `:cyan`, `:magenta`, `:white`, and `:black`. You can also use more specific colors like `:bright_red`, `:bright_green`, etc. Note that colors must be specified as atoms (with colons), not as strings.
+Available colors include standard terminal colors like `:red`, `:green`, `:blue`, `:yellow`, `:cyan`, `:magenta`, `:white`, and `:black`. You can also use lighter versions like `:light_red`, `:light_green`, etc. Note that colors must be specified as atoms (with colons), not as strings.
 
 #### Optional: Add a Catchall Handler
 

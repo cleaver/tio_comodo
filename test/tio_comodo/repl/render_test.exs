@@ -3,92 +3,118 @@ defmodule TioComodo.Repl.RenderTest do
   import ExUnit.CaptureIO
 
   alias TioComodo.Repl.Render
+  alias TioComodo.Colorscheme
 
   describe "redraw/1" do
-    test "displays colored prompt correctly" do
+    test "produces the correct sequence of ANSI codes for drawing the line" do
       state = %{
         prompt: "test> ",
-        buffer: "hello world",
+        buffer: "hello",
         cursor_pos: 5
       }
 
-      # Capture IO output
+      # Expected sequence:
+      # 1. \r       (move to beginning of line)
+      # 2. \e[K      (clear line)
+      # 3. <prompt> (colored)
+      # 4. <buffer>
+      # 5. \e[<n>D  (move cursor back, if needed)
+      # In this case, cursor is at the end, so no move back is needed.
+      prompt_colored = Colorscheme.colorize("test> ", :prompt)
+      expected_output = "\r\e[K" <> prompt_colored <> "hello"
+
       output = capture_io(fn -> Render.redraw(state) end)
-
-      # Should contain the prompt and buffer
-      assert output =~ "test> "
-      assert output =~ "hello world"
-
-      # Should contain cursor positioning
-      assert output =~ "\e[6D"  # Move back 6 characters (11 - 5)
+      assert output == expected_output
     end
 
-    test "positions cursor correctly after colored prompt" do
+    test "positions cursor correctly when not at the end of the buffer" do
       state = %{
         prompt: "test> ",
         buffer: "hello world",
         cursor_pos: 5
       }
 
-      output = capture_io(fn -> Render.redraw(state) end)
+      prompt_colored = Colorscheme.colorize("test> ", :prompt)
+      # 11 (buffer length) - 5 (cursor_pos) = 6 chars to move back
+      expected_output = "\r\e[K" <> prompt_colored <> "hello world" <> "\e[6D"
 
-      # Should contain cursor positioning
-      assert output =~ "\e[6D"  # Move back 6 characters (11 - 5)
+      output = capture_io(fn -> Render.redraw(state) end)
+      assert output == expected_output
     end
   end
 
   describe "print_completions/1" do
-    test "shows colored bullet points" do
-      completions = ["hello", "help", "history"]
+    test "formats completions and moves cursor back to original line" do
+      completions = ["hello", "help"]
+      bullet = Colorscheme.colorize("  • ", :completion)
+
+      # Expected sequence:
+      # 1. \r\n (newline)
+      # 2. <bullet> completion1 \r\n
+      # 3. <bullet> completion2 \r\n
+      # 4. \e[<n>A (move cursor up n lines)
+      # n = number of completions + 1
+      expected_output =
+        "\r\n" <> 
+          bullet <> "hello\r\n" <> 
+          bullet <> "help\r\n" <> 
+          "\e[3A"
 
       output = capture_io(fn -> Render.print_completions(completions) end)
-
-      # Should contain bullet points and completions
-      assert output =~ "  • "
-      assert output =~ "hello"
-      assert output =~ "help"
-      assert output =~ "history"
+      assert output == expected_output
     end
 
     test "handles empty completions list" do
       output = capture_io(fn -> Render.print_completions([]) end)
-
-      # Should not output anything
       assert output == ""
     end
   end
 
   describe "colored message functions" do
-    test "print_error outputs with error colors" do
+    test "print_error outputs colored message without extra newlines" do
+      expected = Colorscheme.colorize("Test error", :error)
       output = capture_io(fn -> Render.print_error("Test error") end)
-
-      # Should contain the error message
-      assert output =~ "Test error"
-
-      # Should contain color codes (Owl generates ANSI codes)
-      assert output != "Test error"  # Should be different due to color
+      assert output == expected
     end
 
-    test "print_success outputs with success colors" do
+    test "print_success outputs colored message with surrounding newlines" do
+      expected = Colorscheme.colorize("Test success", :success) <> "\r\n"
       output = capture_io(fn -> Render.print_success("Test success") end)
-
-      # Should contain the success message
-      assert output =~ "Test success"
-
-      # Should contain color codes
-      assert output != "Test success"
+      assert output == expected
     end
 
-
-
-    test "print_info outputs with info colors" do
+    test "print_info outputs colored message with surrounding newlines" do
+      expected = Colorscheme.colorize("Test info", :info) <> "\r\n"
       output = capture_io(fn -> Render.print_info("Test info") end)
+      assert output == expected
+    end
 
-      # Should contain the info message
-      assert output =~ "Test info"
+    test "print_command outputs colored message with surrounding newlines" do
+      expected = "\r\n" <> Colorscheme.colorize("my command", :user) <> "\r\n"
+      output = capture_io(fn -> Render.print_command("my command") end)
+      assert output == expected
+    end
+  end
 
-      # Should contain color codes
-      assert output != "Test info"
+  describe "terminal output helpers" do
+    test "newline/0 prints a carriage return and line feed" do
+      assert capture_io(fn -> Render.newline() end) == "\r\n"
+    end
+
+    test "home_cursor/0 prints a carriage return" do
+      assert capture_io(fn -> Render.home_cursor() end) == "\r"
+    end
+
+    test "clear_line/0 prints the clear line ANSI code" do
+      assert capture_io(fn -> Render.clear_line() end) == "\e[K"
+    end
+
+    test "move_cursor_up/1 prints the correct ANSI code" do
+      assert capture_io(fn -> Render.move_cursor_up(5) end) == "\e[5A"
+    end
+
+    test "move_cursor_back/1 prints the correct ANSI code" do
+      assert capture_io(fn -> Render.move_cursor_back(3) end) == "\e[3D"
     end
   end
 end
