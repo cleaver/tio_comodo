@@ -39,7 +39,8 @@ defmodule TioComodo.Repl.Render do
 
     # Position cursor at the correct position
     # We need to move back from the end of the buffer to the cursor position
-    buffer_length = String.length(buffer)
+    # Use Ucwidth.width for proper emoji and CJK character handling
+    buffer_length = Ucwidth.width(buffer)
     chars_to_move_back = buffer_length - cursor_pos
 
     if chars_to_move_back > 0 do

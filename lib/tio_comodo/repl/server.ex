@@ -196,7 +196,7 @@ defmodule TioComodo.Repl.Server do
     after_cursor = String.slice(state.buffer, state.cursor_pos..-1//1)
     new_buffer = before_cursor <> char <> after_cursor
 
-    %{state | buffer: new_buffer, cursor_pos: state.cursor_pos + String.length(char)}
+    %{state | buffer: new_buffer, cursor_pos: state.cursor_pos + Ucwidth.width(char)}
   end
 
   defp handle_event({:key, :backspace}, %__MODULE__{} = state) do
@@ -221,7 +221,7 @@ defmodule TioComodo.Repl.Server do
   end
 
   defp handle_event({:key, :right}, %__MODULE__{} = state) do
-    if state.cursor_pos < String.length(state.buffer) do
+    if state.cursor_pos < Ucwidth.width(state.buffer) do
       %{state | cursor_pos: state.cursor_pos + 1}
     else
       state
@@ -239,7 +239,7 @@ defmodule TioComodo.Repl.Server do
       %{
         state
         | buffer: history_item,
-          cursor_pos: String.length(history_item),
+          cursor_pos: Ucwidth.width(history_item),
           history_pos: new_history_pos,
           original_buffer: original_buffer
       }
@@ -259,7 +259,8 @@ defmodule TioComodo.Repl.Server do
         %{
           state
           | buffer: restored,
-            cursor_pos: String.length(restored),
+            # Use Ucwidth.width for proper emoji and CJK character handling
+            cursor_pos: Ucwidth.width(restored),
             history_pos: 0,
             original_buffer: nil
         }
@@ -269,7 +270,8 @@ defmodule TioComodo.Repl.Server do
         %{
           state
           | buffer: history_item,
-            cursor_pos: String.length(history_item),
+            # Use Ucwidth.width for proper emoji and CJK character handling
+            cursor_pos: Ucwidth.width(history_item),
             history_pos: new_history_pos
         }
       end
@@ -298,7 +300,7 @@ defmodule TioComodo.Repl.Server do
 
         new_cursor_pos =
           state.cursor_pos +
-            (String.length(single_completion) -
+            (Ucwidth.width(single_completion) -
                Autocomplete.get_word_length_at_cursor(state.buffer, state.cursor_pos))
 
         %{state | buffer: new_buffer, cursor_pos: new_cursor_pos}
@@ -326,7 +328,7 @@ defmodule TioComodo.Repl.Server do
   end
 
   defp handle_event({:key, :end}, %__MODULE__{} = state) do
-    %{state | cursor_pos: String.length(state.buffer)}
+    %{state | cursor_pos: Ucwidth.width(state.buffer)}
   end
 
   defp handle_event(_event, %__MODULE__{} = state) do

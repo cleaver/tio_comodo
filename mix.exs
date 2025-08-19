@@ -6,7 +6,7 @@ defmodule TioComodo.MixProject do
   def project do
     [
       app: :tio_comodo,
-      version: "0.1.0",
+      version: "0.1.1",
       elixir: "~> 1.18",
       deps: deps(),
 
