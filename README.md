@@ -99,7 +99,8 @@ defmodule MyApp.Repl.Commands do
     %{
       "hello" => {__MODULE__, :hello, []},
       "time" => {__MODULE__, :time, []},
-      "quit" => {__MODULE__, :quit, []}
+      "quit" => {__MODULE__, :quit, []},
+      "catchall_handler" =>, {__MODULE__, :handle_unknown, []}
     }
   end
 
@@ -112,18 +113,6 @@ defmodule MyApp.Repl.Commands do
     {:ok, "I don't understand: #{input}. Try 'hello', 'time', or 'quit'."}
   end
 end
-```
-
-Configure both the simple provider and the catchall handler:
-
-```elixir
-# config/config.exs
-
-import Config
-
-config :tio_comodo,
-  simple_provider: {MyApp.Repl.Commands, :commands},
-  catchall_handler: {MyApp.Repl.Commands, :handle_unknown}
 ```
 
 The catchall handler will not appear in tab-completion suggestions.
