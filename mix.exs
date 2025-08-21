@@ -1,12 +1,12 @@
 defmodule TioComodo.MixProject do
   use Mix.Project
 
-  @source_url "https://github.com/user/repo"
+  @source_url "https://github.com/cleaver/tio_comodo"
 
   def project do
     [
       app: :tio_comodo,
-      version: "0.1.1",
+      version: "0.1.2",
       elixir: "~> 1.18",
       deps: deps(),
       description: "A simple, embeddable REPL for Elixir applications.",

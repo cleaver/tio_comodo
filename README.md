@@ -9,7 +9,7 @@ To use TioComodo in your project, add it to your list of dependencies in `mix.ex
 ```elixir
 def deps do
   [
-    {:tio_comodo, "~> 0.1.1"}
+    {:tio_comodo, "~> 0.1.2"}
   ]
 end
 ```
