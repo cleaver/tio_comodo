@@ -6,7 +6,7 @@ defmodule TioComodo.MixProject do
   def project do
     [
       app: :tio_comodo,
-      version: "0.1.2",
+      version: "0.1.3",
       elixir: "~> 1.18",
       deps: deps(),
       description: "A simple, embeddable REPL for Elixir applications.",
@@ -14,7 +14,6 @@ defmodule TioComodo.MixProject do
         licenses: ["Apache-2.0"],
         links: %{"GitHub" => @source_url}
       ],
-
       name: "Tio Comodo",
       source_url: @source_url,
       docs: [

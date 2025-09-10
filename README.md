@@ -218,3 +218,71 @@ my_app>
 ```
 
 You can now use the `hello`, `time`, and `quit` commands.
+
+## External Output
+
+TioComodo supports displaying output from external processes without interrupting user input. This is useful for long-running processes, notifications, or any background activity that needs to communicate with the user.
+
+### Basic Usage
+
+Use the `output/1` function to send messages to the REPL from any process:
+
+```elixir
+# Send output to the default REPL server
+TioComodo.Repl.Server.output("Process completed!")
+
+# Send output to a named REPL server
+TioComodo.Repl.Server.output(MyApp.Repl, "Custom message")
+```
+
+### Example: Long-Running Process
+
+Here's a complete example showing how to handle long-running processes:
+
+```elixir
+# lib/my_app/repl/commands.ex
+
+defmodule MyApp.Repl.Commands do
+  def commands do
+    %{
+      "hello" => {__MODULE__, :hello, []},
+      "long_task" => {__MODULE__, :long_task, []},
+      "quit" => {__MODULE__, :quit, []}
+    }
+  end
+
+  def hello(args), do: {:ok, "Hello, #{Enum.join(args, " ")}!"}
+  
+  def long_task(_args) do
+    # Start the long-running process
+    spawn(fn ->
+      TioComodo.Repl.Server.output("Starting long task...")
+      
+      # Simulate work
+      Process.sleep(2000)
+      TioComodo.Repl.Server.output("Task 50% complete...")
+      
+      Process.sleep(2000)
+      TioComodo.Repl.Server.output("Task completed successfully!")
+    end)
+    
+    {:ok, "Long task started in background"}
+  end
+
+  def quit(_args), do: {:stop, :normal, "Goodbye!"}
+end
+```
+
+### How It Works
+
+- External output appears immediately without interrupting keyboard input
+- The current input line is preserved and redrawn after external output
+- Multiple external processes can send output concurrently
+- Output is displayed with proper newline handling for terminal formatting
+
+### Use Cases
+
+- **Background jobs**: Notify users when long-running tasks complete
+- **System monitoring**: Display real-time status updates
+- **Notifications**: Show alerts or warnings from other parts of your application
+- **Progress updates**: Provide feedback during lengthy operations

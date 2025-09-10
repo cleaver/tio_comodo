@@ -94,6 +94,24 @@ defmodule TioComodo.Repl.Server do
     GenServer.call(server, :get_state)
   end
 
+  @doc """
+  Sends external output to the REPL for display.
+
+  This function allows external processes to send output to the REPL
+  without interrupting the current input. The output will be displayed
+  immediately and the current input state will be restored.
+
+  ## Examples
+
+      TioComodo.Repl.Server.output("Process completed!")
+      TioComodo.Repl.Server.output("Error: Connection failed")
+      TioComodo.Repl.Server.output(MyApp.Repl, "Custom message")
+  """
+  @spec output(String.t(), GenServer.server()) :: :ok
+  def output(message, server \\ __MODULE__) do
+    GenServer.cast(server, {:external_output, message})
+  end
+
   # GenServer callbacks
 
   @impl GenServer
@@ -103,10 +121,11 @@ defmodule TioComodo.Repl.Server do
 
     server_pid = self()
     # Spawn and link the reader process, passing the server's PID
-    reader_pid = spawn_link(fn ->
-      Process.group_leader(server_pid, Process.group_leader())
-      read_loop(server_pid)
-    end)
+    reader_pid =
+      spawn_link(fn ->
+        Process.group_leader(server_pid, Process.group_leader())
+        read_loop(server_pid)
+      end)
 
     # Initialize state
     provider =
@@ -145,6 +164,18 @@ defmodule TioComodo.Repl.Server do
     Render.redraw(new_state)
 
     {:noreply, new_state}
+  end
+
+  @impl GenServer
+  def handle_cast({:external_output, message}, %__MODULE__{} = state) do
+    # Print the external output with newlines
+    Render.print_with_newlines(message)
+    Render.newline()
+
+    # Redraw the current input state to restore the prompt and buffer
+    Render.redraw(state)
+
+    {:noreply, state}
   end
 
   @impl GenServer
