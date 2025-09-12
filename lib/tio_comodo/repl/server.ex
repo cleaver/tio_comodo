@@ -101,11 +101,14 @@ defmodule TioComodo.Repl.Server do
   without interrupting the current input. The output will be displayed
   immediately and the current input state will be restored.
 
+  If the TioComodo genserver was started with the name parameter different from
+  `TioComodo.Repl.Server`, be sure the specify the second argument.
+
   ## Examples
 
       TioComodo.Repl.Server.output("Process completed!")
       TioComodo.Repl.Server.output("Error: Connection failed")
-      TioComodo.Repl.Server.output(MyApp.Repl, "Custom message")
+      TioComodo.Repl.Server.output("Custom message", MyApp.Repl)
   """
   @spec output(String.t(), GenServer.server()) :: :ok
   def output(message, server \\ __MODULE__) do
